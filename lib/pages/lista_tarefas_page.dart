@@ -13,10 +13,10 @@ class _ListaTarefasPageState extends State<ListaTarefaPage>{
 
   final tarefas = <Tarefa>
    [
-     //Tarefa(id: 1,
-     //    descricao: 'Fazer atividades da aula',
-      //    prazo: DateTime.now().add(Duration(days: 5)),
-     //)
+     Tarefa(id: 1,
+         descricao: 'Fazer atividades da aula',
+          prazo: DateTime.now().add(Duration(days: 5)),
+     )
   ];
 
   @override
