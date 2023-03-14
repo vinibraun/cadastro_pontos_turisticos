@@ -12,10 +12,10 @@ class ConteudoFormDialog extends StatefulWidget{
 
 
   @override
-  _ConteudoFormDialogState createState() => _ConteudoFormDialogState();
+  ConteudoFormDialogState createState() => ConteudoFormDialogState();
 
 }
-class _ConteudoFormDialogState extends State<ConteudoFormDialog> {
+class ConteudoFormDialogState extends State<ConteudoFormDialog> {
 
   final formKey = GlobalKey<FormState>();
   final descricaoController = TextEditingController();
@@ -26,10 +26,10 @@ class _ConteudoFormDialogState extends State<ConteudoFormDialog> {
   void initState(){
     super.initState();
     if (widget.tarefaAtual != null){
-
+      descricaoController.text = widget.tarefaAtual!.descricao;
+      prazoController.text = widget.tarefaAtual!.prazoFormatado;
     }
   }
-
 
   Widget build(BuildContext context){
     return Form(
@@ -64,7 +64,32 @@ class _ConteudoFormDialogState extends State<ConteudoFormDialog> {
           ],
         )
     );
-
+  }
+  void _mostrarCalendario(){
+    final dataFormatada = prazoController.text;
+    var data = DateTime.now();
+    if(dataFormatada.isNotEmpty){
+      data = _dateFormat.parse(dataFormatada);
+    }
+    showDatePicker(
+        context: context,
+        initialDate: data,
+        firstDate: data.subtract(Duration(days:365 * 5 )),
+        lastDate: data.add(Duration(days:365 * 5 )),
+    ).then((DateTime? dataSelecionada){
+      if(dataSelecionada != null){
+        setState(() {
+          prazoController.text = _dateFormat.format(dataSelecionada);
+        });
+      }
+    });
   }
 
+  bool dadosValidados() => formKey.currentState?.validate() == true;
+
+  Tarefa get novaTarefa => Tarefa(
+      id: widget.tarefaAtual?.id ?? 0,
+      descricao: descricaoController.text,
+      prazo: prazoController.text.isEmpty ? null : _dateFormat.parse(prazoController.text),
+  );
 }
