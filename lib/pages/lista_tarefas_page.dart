@@ -14,6 +14,7 @@ class ListaTarefaPage extends StatefulWidget{
 class _ListaTarefasPageState extends State<ListaTarefaPage>{
 
   static const ACAO_EDITAR = 'editar';
+  static const ACAO_EXCLUIR = 'excluir';
 
   final tarefas = <Tarefa>
    [
@@ -61,6 +62,7 @@ class _ListaTarefasPageState extends State<ListaTarefaPage>{
                       }else{
                         tarefas[index] = novaTarefa;
                       }
+                      tarefas.add(novaTarefa);
                     });
                     Navigator.of(context).pop();
                   }
@@ -103,12 +105,49 @@ class _ListaTarefasPageState extends State<ListaTarefaPage>{
             onSelected: (String valorSelecinado){
                 if(valorSelecinado == ACAO_EDITAR){
                   _abrirForm(tarefaAtual: tarefa, index: index);
+                }else{
+                  _excluir(index);
                 }
             }
           );
         },
         separatorBuilder: (BuildContext context, int index) => Divider(),
         );
+  }
+  void _excluir(int indice){
+    showDialog(
+        context: context,
+        builder: (BuildContext context){
+          return AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.warning, color: Colors.red,),
+                Padding(
+                    padding: EdgeInsets.only(left: 10),
+                  child: Text('Atenção'),
+                )
+              ],
+            ),
+            content: Text('Esse registro será deletado permanentemente'),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text('Cancelar')
+              ),
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    setState(() {
+                      tarefas.removeAt(indice);
+                    });
+                  },
+                  child: Text('OK')
+              )
+            ],
+          );
+        }
+    );
+
   }
   List<PopupMenuEntry<String>> _criarItensMenu(){
     return[
@@ -123,6 +162,18 @@ class _ListaTarefasPageState extends State<ListaTarefaPage>{
               )
             ],
           ),
+      ),
+      PopupMenuItem(
+        value: ACAO_EXCLUIR,
+        child: Row(
+          children: [
+            Icon(Icons.delete, color: Colors.red),
+            Padding(
+              padding: EdgeInsets.only(left: 10),
+              child: Text('Excluir'),
+            )
+          ],
+        ),
       )
     ];
   }
