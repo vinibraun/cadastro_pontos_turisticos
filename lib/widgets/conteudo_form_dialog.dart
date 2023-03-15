@@ -10,7 +10,6 @@ class ConteudoFormDialog extends StatefulWidget{
 
   ConteudoFormDialog({Key? key, this.tarefaAtual}) : super (key: key);
 
-
   @override
   ConteudoFormDialogState createState() => ConteudoFormDialogState();
 

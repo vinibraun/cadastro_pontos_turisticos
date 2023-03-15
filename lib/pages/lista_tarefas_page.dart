@@ -13,11 +13,13 @@ class ListaTarefaPage extends StatefulWidget{
 }
 class _ListaTarefasPageState extends State<ListaTarefaPage>{
 
+  static const ACAO_EDITAR = 'editar';
+
   final tarefas = <Tarefa>
    [
      Tarefa(id: 1,
          descricao: 'Fazer atividades da aula',
-          prazo: DateTime.now().add(Duration(days: 5)),
+         prazo: DateTime.now().add(Duration(days: 5)),
      )
   ];
 
@@ -92,12 +94,36 @@ class _ListaTarefasPageState extends State<ListaTarefaPage>{
         itemCount: tarefas.length,
         itemBuilder: (BuildContext context, int index){
           final tarefa = tarefas[index];
-          return ListTile(
-            title: Text('${tarefa.id} - ${tarefa.descricao}'),
-            subtitle: Text('Prazo - ${tarefa.prazo}'),
+          return PopupMenuButton<String>(
+              child: ListTile(
+                title: Text('${tarefa.id} - ${tarefa.descricao}'),
+                subtitle: Text(tarefa.prazo == null ? 'Tarefa sem prazo definido' : 'Prazo - ${tarefa.prazoFormatado}'),
+              ),
+              itemBuilder: (BuildContext context) => _criarItensMenu(),
+            onSelected: (String valorSelecinado){
+                if(valorSelecinado == ACAO_EDITAR){
+                  _abrirForm(tarefaAtual: tarefa, index: index);
+                }
+            }
           );
         },
         separatorBuilder: (BuildContext context, int index) => Divider(),
         );
+  }
+  List<PopupMenuEntry<String>> _criarItensMenu(){
+    return[
+      PopupMenuItem(
+        value: ACAO_EDITAR,
+          child: Row(
+            children: [
+              Icon(Icons.edit, color: Colors.black),
+              Padding(
+                  padding: EdgeInsets.only(left: 10),
+                child: Text('Editar'),
+              )
+            ],
+          ),
+      )
+    ];
   }
 }
