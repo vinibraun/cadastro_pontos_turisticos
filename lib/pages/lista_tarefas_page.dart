@@ -18,13 +18,13 @@ class _ListaTarefasPageState extends State<ListaTarefaPage>{
 
   final tarefas = <Tarefa>
    [
-     Tarefa(id: 1,
-         descricao: 'Fazer atividades da aula',
-         prazo: DateTime.now().add(Duration(days: 5)),
-     )
+     //Tarefa(id: 1,
+        // descricao: 'Fazer atividades da aula',
+        // prazo: DateTime.now().add(Duration(days: 5)),
+    // )
   ];
 
- var _ultimoId = 1;
+ var _ultimoId = 0;
 
   @override
   Widget build(BuildContext context){
