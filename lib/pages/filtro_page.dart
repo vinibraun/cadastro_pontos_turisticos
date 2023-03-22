@@ -50,7 +50,7 @@ class _FiltroPageState extends State<FiltroPage> {
           ),
           body: _criarBody(),
         ),
-        onWillPop: _OnVoltarClick,
+        onWillPop: _onVoltarClick,
     );
   }
 
@@ -118,5 +118,9 @@ class _FiltroPageState extends State<FiltroPage> {
     _alterouValores = true;
   }
 
+  Future<bool> _onVoltarClick() async {
+    Navigator.of(context).pop(_alterouValores);
+    return true;
+  }
 }
 
