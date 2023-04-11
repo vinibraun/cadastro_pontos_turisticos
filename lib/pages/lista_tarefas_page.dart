@@ -62,10 +62,10 @@ class _ListaTarefasPageState extends State<ListaTarefaPage>{
                       final novaTarefa = key.currentState!.novaTarefa;
                       if(index == null){
                         novaTarefa.id = ++_ultimoId;
+                        tarefas.add(novaTarefa);
                       }else{
                         tarefas[index] = novaTarefa;
                       }
-                      tarefas.add(novaTarefa);
                     });
                     Navigator.of(context).pop();
                   }

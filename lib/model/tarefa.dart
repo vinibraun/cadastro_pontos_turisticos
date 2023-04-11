@@ -31,5 +31,4 @@ class Tarefa{
     descricao: map[CAMPO_DESCRICAO] is String ? map[CAMPO_DESCRICAO] : '',
     prazo: map[CAMPO_PRAZO] == null ? null : DateFormat("yyyy-MM-dd").parse(map[CAMPO_PRAZO]),
   );
-
 }
