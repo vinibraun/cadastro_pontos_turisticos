@@ -16,14 +16,14 @@ class FiltroPage extends StatefulWidget{
 class _FiltroPageState extends State<FiltroPage> {
 
   final _camposParaOrdenacao = {
-    Tarefa.CAMPO_ID: 'Código',
-    Tarefa.CAMPO_DESCRICAO: 'Descrição',
-    Tarefa.CAMPO_PRAZO: 'Prazo'
+    Tarefa.campoId: 'Código',
+    Tarefa.campoDescricao: 'Descrição',
+    Tarefa.campoPrazo: 'Prazo'
   };
 
   late final SharedPreferences _prefes;
   final _descricaoController = TextEditingController();
-  String _campoOrdenacao = Tarefa.CAMPO_ID;
+  String _campoOrdenacao = Tarefa.campoId;
   bool _usarOrdemDecrescente = false;
   bool _alterouValores = false;
 
@@ -36,7 +36,7 @@ class _FiltroPageState extends State<FiltroPage> {
   void _carregaDadosSharedPreferences() async {
     _prefes = await SharedPreferences.getInstance();
     setState(() {
-      _campoOrdenacao = _prefes.getString(FiltroPage.chaveCampoOrdenacao) ?? Tarefa.CAMPO_ID;
+      _campoOrdenacao = _prefes.getString(FiltroPage.chaveCampoOrdenacao) ?? Tarefa.campoId;
       _usarOrdemDecrescente = _prefes.getBool(FiltroPage.chaveUsarOrdemDecrescente) == true;
       _descricaoController.text = _prefes.getString(FiltroPage.chaveCampoDescricao) ?? '' ;
     });

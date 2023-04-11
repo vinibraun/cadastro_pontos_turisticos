@@ -18,7 +18,7 @@ class AppGerenciadorTarefas extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: ListaTarefaPage(),
+      home: ListaTarefasPage(),
       routes: {
         FiltroPage.routeName: (BuildContext context) => FiltroPage(),
       },

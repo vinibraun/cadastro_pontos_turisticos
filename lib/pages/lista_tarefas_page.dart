@@ -1,40 +1,35 @@
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:gerenciador_tarefas_md/model/tarefa.dart';
-import 'package:gerenciador_tarefas_md/pages/detalhes_tarefa_page.dart';
+import 'package:flutter/widgets.dart';
 import 'package:gerenciador_tarefas_md/pages/filtro_page.dart';
 
 import '../dao/tarefa_dao.dart';
+import '../model/tarefa.dart';
 import '../widgets/conteudo_form_dialog.dart';
+import 'detalhes_tarefa_page.dart';
 
-class ListaTarefaPage extends StatefulWidget{
-
+class ListaTarefasPage extends StatefulWidget {
   @override
-  _ListaTarefasPageState createState() => _ListaTarefasPageState();
-
+  State<StatefulWidget> createState() => _ListaTarefasPageState();
 }
-class _ListaTarefasPageState extends State<ListaTarefaPage>{
 
-  static const ACAO_EDITAR = 'editar';
-  static const ACAO_EXCLUIR = 'excluir';
-  static const ACAO_VISUALIZAR = 'visualizar';
+class _ListaTarefasPageState extends State<ListaTarefasPage> {
+  static const acaoEditar = 'editar';
+  static const acaoExcluir = 'excluir';
+  static const acaoVisualizar = 'visualizar';
 
-  final tarefas = <Tarefa>
-   [
-     //Tarefa(id: 1,
-        // descricao: 'Fazer atividades da aula',
-        // prazo: DateTime.now().add(Duration(days: 5)),
-    // )
+  final _tarefas = <Tarefa>[
+    Tarefa(id: 1,
+    descricao: 'Fazer atividades da aula',
+    prazo: DateTime.now().add(Duration(days: 5)),
+     )
   ];
   final _dao = TarefaDao();
- var _ultimoId = 0;
 
- @override
- void initState(){
-   super.initState();
-   _atualizarDados();
- }
+ // @override
+ // void initState() {
+ //   super.initState();
+ //   _atualizarLista();
+ // }
 
   @override
   Widget build(BuildContext context) {
@@ -42,195 +37,205 @@ class _ListaTarefasPageState extends State<ListaTarefaPage>{
       appBar: _criarAppBar(),
       body: _criarBody(),
       floatingActionButton: FloatingActionButton(
+        tooltip: 'Nova Tarefa',
+        child: Icon(Icons.add),
         onPressed: _abrirForm,
-        tooltip: 'Nova tarefa',
-        child: const Icon(Icons.add),
       ),
     );
   }
 
-  void _atualizarDados() async{
-    final tarefa = await _dao.listar();
-    setState(() {
-      tarefas.clear();
-      if (tarefa.isNotEmpty){
-        tarefas.addAll(tarefa);
-      }
-    });
-  }
-
-  void _abrirForm({Tarefa? tarefaAtual}){
-    final key = GlobalKey<ConteudoFormDialogState>();
-    showDialog(
-        context: context,
-        builder: (BuildContext context){
-          return AlertDialog(
-            title: Text(tarefaAtual == null ? 'Nova Tarefa' : 'Alterar a tarefa ${tarefaAtual.id}'),
-            content: ConteudoFormDialog(key: key, tarefaAtual: tarefaAtual),
-            actions: [
-              TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text('Cancelar'),
-              ),
-              TextButton(
-                onPressed: () {
-                  if (key.currentState != null && key.currentState!.dadosValidados()){
-                    Navigator.of(context).pop();
-                    final novaTarefa = key.currentState!.novaTarefa;
-                    _dao.salvar(novaTarefa).then((success){
-                      if (success){
-                        _atualizarDados();
-                      }
-                    }
-                    );
-                  }
-                },
-                child: Text('Salvar'),
-              ),
-            ],
-          );
-        }
-    );
-  }
- AppBar _criarAppBar(){
+  AppBar _criarAppBar() {
     return AppBar(
-      title: const Text('Gerenciador de Tarefas'),
+      title: Text('Tarefas'),
       actions: [
         IconButton(
-            onPressed: _abrirPaginaFiltro,
-            icon: const Icon(Icons.filter_list)),
+          icon: Icon(Icons.filter_list),
+          tooltip: 'Filtro e Ordenação',
+          onPressed: _abrirPaginaFiltro,
+        ),
       ],
     );
- }
-  Widget _criarBody(){
-    if( tarefas.isEmpty){
-      return const Center(
-        child: Text('Nenhuma tarefa cadastrada',
-        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+  }
+
+  Widget _criarBody() {
+    if (_tarefas.isEmpty) {
+      return Center(
+        child: Text(
+          'Nenhuma tarefa cadastrada',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).primaryColor,
+          ),
         ),
       );
     }
     return ListView.separated(
-        itemCount: tarefas.length,
-        itemBuilder: (BuildContext context, int index){
-          final tarefa = tarefas[index];
-          return PopupMenuButton<String>(
-              child: ListTile(
-                title: Text('${tarefa.id} - ${tarefa.descricao}'),
-                subtitle: Text(tarefa.prazo == null ? 'Tarefa sem prazo definido' : 'Prazo - ${tarefa.prazoFormatado}'),
-              ),
-              itemBuilder: (BuildContext context) => _criarItensMenu(),
-            onSelected: (String valorSelecinado){
-                if(valorSelecinado == ACAO_EDITAR){
-                  _abrirForm(tarefaAtual: tarefa);
-                }else if(valorSelecinado == ACAO_VISUALIZAR) {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => DetalhePage(tarefa: tarefa),
-                  )
-                  );
-                }
-                else{
-                  _excluir(tarefa);
-                }
-            },
-          );
-        },
-        separatorBuilder: (BuildContext context, int index) => Divider(),
-        );
-  }
-  void _excluir(Tarefa tarefa){
-    showDialog(
-        context: context,
-        builder: (BuildContext context){
-          return AlertDialog(
-            title: Row(
-              children: [
-                Icon(Icons.warning, color: Colors.red,),
-                Padding(
-                    padding: EdgeInsets.only(left: 10),
-                  child: Text('Atenção'),
-                )
-              ],
-            ),
-            content: Text('Esse registro será deletado permanentemente'),
-            actions: [
-              TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text('Cancelar')
-              ),
-              TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    if( tarefa.id == null){
-                      return;
-                    }else{
-                      _dao.remover(tarefa.id).then((success) {
-                        if(success){
-                          _atualizarDados();
-                        }
-                      },
-                      );
-                    }
-
-                  },
-                  child: Text('OK')
-              )
-            ],
-          );
-        }
-    );
-
-  }
-  List<PopupMenuEntry<String>> _criarItensMenu(){
-    return[
-      PopupMenuItem(
-        value: ACAO_VISUALIZAR,
-        child: Row(
-          children: [
-            Icon(Icons.visibility, color: Colors.blue),
-            Padding(
-              padding: EdgeInsets.only(left: 10),
-              child: Text('Visualizar'),
-            )
-          ],
-        ),
-      ),
-      PopupMenuItem(
-        value: ACAO_EDITAR,
-          child: Row(
-            children: [
-              Icon(Icons.edit, color: Colors.black),
-              Padding(
-                  padding: EdgeInsets.only(left: 10),
-                child: Text('Editar'),
-              )
-            ],
+      itemCount: _tarefas.length,
+      itemBuilder: (BuildContext context, int index) {
+        final tarefa = _tarefas[index];
+        return PopupMenuButton<String>(
+          child: ListTile(
+            title: Text(
+              '${tarefa.id} - ${tarefa.descricao}'),
+            subtitle: Text(tarefa.prazoFormatado)
           ),
-      ),
-      PopupMenuItem(
-        value: ACAO_EXCLUIR,
-        child: Row(
-          children: [
-            Icon(Icons.delete, color: Colors.red),
-            Padding(
-              padding: EdgeInsets.only(left: 10),
-              child: Text('Excluir'),
-            )
-          ],
-        ),
-      ),
-    ];
+          itemBuilder: (_) => _criarItensMenuPopup(),
+          onSelected: (String valorSelecionado) {
+            if (valorSelecionado == acaoEditar) {
+              _abrirForm(tarefa: tarefa);
+            } else if (valorSelecionado == acaoExcluir) {
+              _excluir(tarefa);
+            } else {
+              _abrirPaginaDetalhesTarefa(tarefa);
+            }
+          },
+        );
+      },
+      separatorBuilder: (_, __) => Divider(),
+    );
   }
 
-  void _abrirPaginaFiltro(){
-    final navigator = Navigator.of(context);
-    navigator.pushNamed(FiltroPage.routeName).then((alterouValores){
-      if( alterouValores == true){
-        ///filtro
-      }
-    }
+  List<PopupMenuEntry<String>> _criarItensMenuPopup() => [
+    PopupMenuItem(
+      value: acaoEditar,
+      child: Row(
+        children: const [
+          Icon(Icons.edit, color: Colors.black),
+          Padding(
+            padding: EdgeInsets.only(left: 10),
+            child: Text('Editar'),
+          ),
+        ],
+      ),
+    ),
+    PopupMenuItem(
+      value: acaoExcluir,
+      child: Row(
+        children: const [
+          Icon(Icons.delete, color: Colors.red),
+          Padding(
+            padding: EdgeInsets.only(left: 10),
+            child: Text('Excluir'),
+          ),
+        ],
+      ),
+    ),
+    PopupMenuItem(
+      value: acaoVisualizar,
+      child: Row(
+        children: const [
+          Icon(Icons.info, color: Colors.blue),
+          Padding(
+            padding: EdgeInsets.only(left: 10),
+            child: Text('Visualizar'),
+          ),
+        ],
+      ),
+    ),
+  ];
 
+  void _abrirForm({Tarefa? tarefa}) {
+    final key = GlobalKey<ConteudoFormDialogState>();
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(
+          tarefa == null ? 'Nova Tarefa' : 'Alterar Tarefa ${tarefa.id}',
+        ),
+        content: ConteudoFormDialog(
+          key: key,
+          tarefaAtual: tarefa,
+        ),
+        actions: [
+          TextButton(
+            child: Text('Cancelar'),
+            onPressed: () => Navigator.pop(context),
+          ),
+          TextButton(
+            child: Text('Salvar'),
+            onPressed: () {
+              if (key.currentState?.dadosValidados() != true) {
+                return;
+              }
+              Navigator.of(context).pop();
+              final novaTarefa = key.currentState!.novaTarefa;
+              _dao.salvar(novaTarefa).then((success) {
+                if (success) {
+                  _atualizarLista();
+                }
+              });
+            },
+          ),
+        ],
+      ),
     );
+  }
 
+  void _excluir(Tarefa tarefa) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.warning),
+            Padding(
+              padding: EdgeInsets.only(left: 10),
+              child: Text('Atenção'),
+            ),
+          ],
+        ),
+        content: Text('Esse registro será removido definitivamente.'),
+        actions: [
+          TextButton(
+            child: Text('Cancelar'),
+            onPressed: () => Navigator.pop(context),
+          ),
+          TextButton(
+            child: Text('OK'),
+            onPressed: () {
+              Navigator.pop(context);
+              if (tarefa.id == null) {
+                return;
+              }
+              _dao.remover(tarefa.id!).then((success) {
+                if (success) {
+                  _atualizarLista();
+                }
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _abrirPaginaFiltro() async {
+    final navigator = Navigator.of(context);
+    final alterouValores = await navigator.pushNamed(FiltroPage.routeName);
+    if (alterouValores == true) {
+      _atualizarLista();
+    }
+  }
+
+  void _abrirPaginaDetalhesTarefa(Tarefa tarefa) {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DetalhePage(
+            tarefa: tarefa,
+          ),
+        ));
+  }
+
+  void _atualizarLista() async {
+
+    final tarefas = await _dao.listar();
+    setState(() {
+      _tarefas.clear();
+      if (tarefas.isNotEmpty) {
+        _tarefas.addAll(tarefas);
+      }
+    });
   }
 }
