@@ -5,6 +5,7 @@ import 'package:gerenciador_tarefas_md/model/tarefa.dart';
 import 'package:gerenciador_tarefas_md/pages/detalhes_tarefa_page.dart';
 import 'package:gerenciador_tarefas_md/pages/filtro_page.dart';
 
+import '../dao/tarefa_dao.dart';
 import '../widgets/conteudo_form_dialog.dart';
 
 class ListaTarefaPage extends StatefulWidget{
@@ -26,11 +27,17 @@ class _ListaTarefasPageState extends State<ListaTarefaPage>{
         // prazo: DateTime.now().add(Duration(days: 5)),
     // )
   ];
-
+  final _dao = TarefaDao();
  var _ultimoId = 0;
 
+ @override
+ void initState(){
+   super.initState();
+   _atualizarDados();
+ }
+
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: _criarAppBar(),
       body: _criarBody(),
@@ -42,7 +49,17 @@ class _ListaTarefasPageState extends State<ListaTarefaPage>{
     );
   }
 
-  void _abrirForm({Tarefa? tarefaAtual, int? index}){
+  void _atualizarDados() async{
+    final tarefa = await _dao.listar();
+    setState(() {
+      tarefas.clear();
+      if (tarefa.isNotEmpty){
+        tarefas.addAll(tarefa);
+      }
+    });
+  }
+
+  void _abrirForm({Tarefa? tarefaAtual}){
     final key = GlobalKey<ConteudoFormDialogState>();
     showDialog(
         context: context,
@@ -58,16 +75,14 @@ class _ListaTarefasPageState extends State<ListaTarefaPage>{
               TextButton(
                 onPressed: () {
                   if (key.currentState != null && key.currentState!.dadosValidados()){
-                    setState(() {
-                      final novaTarefa = key.currentState!.novaTarefa;
-                      if(index == null){
-                        novaTarefa.id = ++_ultimoId;
-                        tarefas.add(novaTarefa);
-                      }else{
-                        tarefas[index] = novaTarefa;
-                      }
-                    });
                     Navigator.of(context).pop();
+                    final novaTarefa = key.currentState!.novaTarefa;
+                    _dao.salvar(novaTarefa).then((success){
+                      if (success){
+                        _atualizarDados();
+                      }
+                    }
+                    );
                   }
                 },
                 child: Text('Salvar'),
@@ -107,7 +122,7 @@ class _ListaTarefasPageState extends State<ListaTarefaPage>{
               itemBuilder: (BuildContext context) => _criarItensMenu(),
             onSelected: (String valorSelecinado){
                 if(valorSelecinado == ACAO_EDITAR){
-                  _abrirForm(tarefaAtual: tarefa, index: index);
+                  _abrirForm(tarefaAtual: tarefa);
                 }else if(valorSelecinado == ACAO_VISUALIZAR) {
                   Navigator.of(context).push(MaterialPageRoute(
                       builder: (_) => DetalhePage(tarefa: tarefa),
@@ -115,15 +130,15 @@ class _ListaTarefasPageState extends State<ListaTarefaPage>{
                   );
                 }
                 else{
-                  _excluir(index);
+                  _excluir(tarefa);
                 }
-            }
+            },
           );
         },
         separatorBuilder: (BuildContext context, int index) => Divider(),
         );
   }
-  void _excluir(int indice){
+  void _excluir(Tarefa tarefa){
     showDialog(
         context: context,
         builder: (BuildContext context){
@@ -146,9 +161,17 @@ class _ListaTarefasPageState extends State<ListaTarefaPage>{
               TextButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    setState(() {
-                      tarefas.removeAt(indice);
-                    });
+                    if( tarefa.id == null){
+                      return;
+                    }else{
+                      _dao.remover(tarefa.id).then((success) {
+                        if(success){
+                          _atualizarDados();
+                        }
+                      },
+                      );
+                    }
+
                   },
                   child: Text('OK')
               )
