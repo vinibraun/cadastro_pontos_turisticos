@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:gerenciador_tarefas_md/pages/filtro_page.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import '../dao/tarefa_dao.dart';
 import '../model/tarefa.dart';
 import '../widgets/conteudo_form_dialog.dart';
@@ -24,6 +24,7 @@ class _ListaTarefasPageState extends State<ListaTarefasPage> {
      )
   ];
   final _dao = TarefaDao();
+  var _carregando = false;
 
  // @override
  // void initState() {
@@ -58,6 +59,31 @@ class _ListaTarefasPageState extends State<ListaTarefasPage> {
   }
 
   Widget _criarBody() {
+    if(_carregando){
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Align(
+            alignment: AlignmentDirectional.center,
+            child: CircularProgressIndicator(),
+          ),
+          Align(
+            alignment: AlignmentDirectional.center,
+            child: Padding(
+              padding: EdgeInsets.only(top: 10),
+              child: Text('Carregando suas tarefas',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+            ),
+          )
+        ],
+      );
+    }
+
     if (_tarefas.isEmpty) {
       return Center(
         child: Text(
@@ -76,9 +102,30 @@ class _ListaTarefasPageState extends State<ListaTarefasPage> {
         final tarefa = _tarefas[index];
         return PopupMenuButton<String>(
           child: ListTile(
+            leading: Checkbox(
+              value: tarefa.finalizada,
+              onChanged: (bool? checked){
+                setState(() {
+                  tarefa.finalizada = checked == true;
+                });
+                _dao.salvar(tarefa);
+              },
+            ),
             title: Text(
-              '${tarefa.id} - ${tarefa.descricao}'),
-            subtitle: Text(tarefa.prazoFormatado)
+              '${tarefa.id} - ${tarefa.descricao}',
+                style: TextStyle(
+                  decoration:
+                    tarefa.finalizada ? TextDecoration.lineThrough : null,
+                    color: tarefa.finalizada ? Colors.grey : null,
+                ),
+            ),
+            subtitle: Text(tarefa.prazoFormatado,
+              style: TextStyle(
+                decoration:
+                tarefa.finalizada ? TextDecoration.lineThrough : null,
+                color: tarefa.finalizada ? Colors.grey : null,
+              ),
+            ),
           ),
           itemBuilder: (_) => _criarItensMenuPopup(),
           onSelected: (String valorSelecionado) {
@@ -229,13 +276,25 @@ class _ListaTarefasPageState extends State<ListaTarefasPage> {
   }
 
   void _atualizarLista() async {
+    setState(() {
+      _carregando = true;
+    });
+    final prefs = await SharedPreferences.getInstance();
+    final campoOrdenacao = prefs.getString(FiltroPage.chaveCampoOrdenacao) ?? Tarefa.campoId;
+    final usarOrdenDecrescente = prefs.getBool(FiltroPage.chaveUsarOrdemDecrescente) == true;
+    final filtroDescricao = prefs.getString(FiltroPage.chaveCampoDescricao) ?? '';
 
-    final tarefas = await _dao.listar();
+    final tarefas = await _dao.listar(
+      filtro: filtroDescricao,
+      campoOrdenacao: campoOrdenacao,
+      usarOrdemDecrescente: usarOrdenDecrescente,
+    );
     setState(() {
       _tarefas.clear();
       if (tarefas.isNotEmpty) {
         _tarefas.addAll(tarefas);
       }
+      _carregando = false;
     });
   }
 }

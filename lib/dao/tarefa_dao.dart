@@ -32,7 +32,19 @@ class TarefaDao {
     return registrosAtualizados > 0;
   }
 
-  Future<List<Tarefa>> listar() async {
+  Future<List<Tarefa>> listar({
+    String filtro = '',
+    String campoOrdenacao = Tarefa.campoId,
+    bool usarOrdemDecrescente = false,
+}) async {
+    String? where;
+    if(filtro.isNotEmpty){
+      where = "UPPER(${Tarefa.campoDescricao}) LIKE '${filtro.toUpperCase()}%'";
+    }
+    var orderBy = campoOrdenacao;
+    if(usarOrdemDecrescente){
+      orderBy += ' DESC';
+    }
     final database = await databaseProvider.database;
     final resultado = await database.query(
       Tarefa.nomeTabela,
@@ -40,8 +52,9 @@ class TarefaDao {
         Tarefa.campoId,
         Tarefa.campoDescricao,
         Tarefa.campoPrazo,
-        Tarefa.campoFinalizada
       ],
+      where: where,
+      orderBy: orderBy,
     );
     return resultado.map((m) => Tarefa.fromMap(m)).toList();
   }

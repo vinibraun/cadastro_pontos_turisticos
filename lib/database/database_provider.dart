@@ -31,11 +31,19 @@ class DatabaseProvider {
         ${Tarefa.campoId} INTEGER PRIMARY KEY AUTOINCREMENT,
         ${Tarefa.campoDescricao} TEXT NOT NULL,
         ${Tarefa.campoPrazo} TEXT,
+        ${Tarefa.campoFinalizada} INTEGER NOT NULL DEFAULT 0
       );
     ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    switch(oldVersion){
+      case 1 :
+        await db.execute('''
+          ALTER TABLE ${Tarefa.nomeTabela}
+          ADD ${Tarefa.campoFinalizada} INTEGER NOT NULL DEFAULT 0;
+        ''');
+    }
 
   }
 

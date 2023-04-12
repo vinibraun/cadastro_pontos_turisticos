@@ -16,6 +16,7 @@ class AppGerenciadorTarefas extends StatelessWidget {
       title: 'App - Gerenciador de tarefas',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        primaryColor: Colors.red,
         primarySwatch: Colors.green,
       ),
       home: ListaTarefasPage(),
