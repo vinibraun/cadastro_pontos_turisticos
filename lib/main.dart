@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gerenciador_tarefas_md/pages/filtro_page.dart';
-import 'package:gerenciador_tarefas_md/pages/lista_tarefas_page.dart';
+import 'package:gerenciador_tarefas_md/pages/lista_pontos_page.dart';
 
 void main() {
   runApp(const AppGerenciadorTarefas());
@@ -13,13 +13,13 @@ class AppGerenciadorTarefas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'App - Gerenciador de tarefas',
+      title: 'App - Pontos Turísticos',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: Colors.red,
-        primarySwatch: Colors.green,
+        primaryColor: Colors.black,
+        primarySwatch: Colors.yellow,
       ),
-      home: ListaTarefasPage(),
+      home: ListaPontosPage(),
       routes: {
         FiltroPage.routeName: (BuildContext context) => FiltroPage(),
       },

@@ -3,12 +3,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../model/tarefa.dart';
+import '../model/ponto.dart';
 
 class DetalhePage extends StatefulWidget{
-  final Tarefa tarefa;
+  final Ponto ponto;
 
-  const DetalhePage({Key? key, required this.tarefa}) : super(key: key);
+  const DetalhePage({Key? key, required this.ponto}) : super(key: key);
 
   @override
   _DetalhePageState createState() => _DetalhePageState();
@@ -20,7 +20,7 @@ class _DetalhePageState extends State<DetalhePage>{
   Widget build(BuildContext context){
     return Scaffold(
       appBar: AppBar(
-      title: Text('Detalhes da Tarefa ${widget.tarefa.id}'),
+      title: Text('Detalhes do Ponto ${widget.ponto.id}'),
     ),
       body: _criarBody(),
     );
@@ -34,19 +34,25 @@ class _DetalhePageState extends State<DetalhePage>{
           Row(
             children: [
               Campo(descricao: 'Código: '),
-              Valor(valor: '${widget.tarefa.id}'),
+              Valor(valor: '${widget.ponto.id}'),
             ],
           ),
           Row(
             children: [
               Campo(descricao: 'Descrição: '),
-              Valor(valor: '${widget.tarefa.descricao}'),
+              Valor(valor: '${widget.ponto.descricao}'),
             ],
           ),
           Row(
             children: [
-              Campo(descricao: 'Prazo: '),
-              Valor(valor: widget.tarefa.prazo == null ? 'Tarefa sem prazo definido' : '${widget.tarefa.prazoFormatado}'),
+              Campo(descricao: 'Diferenciais: '),
+              Valor(valor: '${widget.ponto.diferenciais}'),
+            ],
+          ),
+          Row(
+            children: [
+              Campo(descricao: 'Data: '),
+              Valor(valor: widget.ponto.data == null ? 'Ponto sem data definida' : '${widget.ponto.dataFormatado}'),
             ],
           ),
         ],

@@ -1,36 +1,35 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:gerenciador_tarefas_md/pages/filtro_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../dao/tarefa_dao.dart';
-import '../model/tarefa.dart';
+import '../dao/ponto_dao.dart';
+import '../model/ponto.dart';
 import '../widgets/conteudo_form_dialog.dart';
-import 'detalhes_tarefa_page.dart';
+import 'detalhes_ponto_page.dart';
+import 'filtro_page.dart';
 
-class ListaTarefasPage extends StatefulWidget {
+class ListaPontosPage extends StatefulWidget {
   @override
-  State<StatefulWidget> createState() => _ListaTarefasPageState();
+  State<StatefulWidget> createState() => _ListaPontosPageState();
 }
 
-class _ListaTarefasPageState extends State<ListaTarefasPage> {
+class _ListaPontosPageState extends State<ListaPontosPage> {
   static const acaoEditar = 'editar';
   static const acaoExcluir = 'excluir';
   static const acaoVisualizar = 'visualizar';
 
-  final _tarefas = <Tarefa>[
-    Tarefa(id: 1,
-    descricao: 'Fazer atividades da aula',
-    prazo: DateTime.now().add(Duration(days: 5)),
-     )
-  ];
-  final _dao = TarefaDao();
+  final _pontos = <Ponto>[];
+  final _dao = PontoDao();
   var _carregando = false;
 
- // @override
- // void initState() {
- //   super.initState();
- //   _atualizarLista();
- // }
+  //var _ultimoId = 1;
+
+ @override
+ void initState() {
+  super.initState();
+  _atualizarLista();
+ }
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +37,7 @@ class _ListaTarefasPageState extends State<ListaTarefasPage> {
       appBar: _criarAppBar(),
       body: _criarBody(),
       floatingActionButton: FloatingActionButton(
-        tooltip: 'Nova Tarefa',
+        tooltip: 'Nova Ponto',
         child: Icon(Icons.add),
         onPressed: _abrirForm,
       ),
@@ -47,7 +46,7 @@ class _ListaTarefasPageState extends State<ListaTarefasPage> {
 
   AppBar _criarAppBar() {
     return AppBar(
-      title: Text('Tarefas'),
+      title: Text('Pontos'),
       actions: [
         IconButton(
           icon: Icon(Icons.filter_list),
@@ -71,7 +70,7 @@ class _ListaTarefasPageState extends State<ListaTarefasPage> {
             alignment: AlignmentDirectional.center,
             child: Padding(
               padding: EdgeInsets.only(top: 10),
-              child: Text('Carregando suas tarefas',
+              child: Text('Carregando suas pontos',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -84,10 +83,10 @@ class _ListaTarefasPageState extends State<ListaTarefasPage> {
       );
     }
 
-    if (_tarefas.isEmpty) {
+    if (_pontos.isEmpty) {
       return Center(
         child: Text(
-          'Nenhuma tarefa cadastrada',
+          'Nenhum ponto cadastrado',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -97,44 +96,28 @@ class _ListaTarefasPageState extends State<ListaTarefasPage> {
       );
     }
     return ListView.separated(
-      itemCount: _tarefas.length,
+      itemCount: _pontos.length,
       itemBuilder: (BuildContext context, int index) {
-        final tarefa = _tarefas[index];
+        final ponto = _pontos[index];
         return PopupMenuButton<String>(
           child: ListTile(
-            leading: Checkbox(
-              value: tarefa.finalizada,
-              onChanged: (bool? checked){
-                setState(() {
-                  tarefa.finalizada = checked == true;
-                });
-                _dao.salvar(tarefa);
-              },
-            ),
             title: Text(
-              '${tarefa.id} - ${tarefa.descricao}',
-                style: TextStyle(
-                  decoration:
-                    tarefa.finalizada ? TextDecoration.lineThrough : null,
-                    color: tarefa.finalizada ? Colors.grey : null,
-                ),
-            ),
-            subtitle: Text(tarefa.prazoFormatado,
-              style: TextStyle(
-                decoration:
-                tarefa.finalizada ? TextDecoration.lineThrough : null,
-                color: tarefa.finalizada ? Colors.grey : null,
-              ),
-            ),
+              '${ponto.id} - ${ponto.descricao}',
+            ),subtitle: Text('${ponto.diferenciais}'),
+              trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                  Text(ponto.dataFormatado)
+            ]),
           ),
           itemBuilder: (_) => _criarItensMenuPopup(),
           onSelected: (String valorSelecionado) {
             if (valorSelecionado == acaoEditar) {
-              _abrirForm(tarefa: tarefa);
+              _abrirForm(ponto: ponto);
             } else if (valorSelecionado == acaoExcluir) {
-              _excluir(tarefa);
+              _excluir(ponto);
             } else {
-              _abrirPaginaDetalhesTarefa(tarefa);
+              _abrirPaginaDetalhesPonto(ponto);
             }
           },
         );
@@ -182,17 +165,17 @@ class _ListaTarefasPageState extends State<ListaTarefasPage> {
     ),
   ];
 
-  void _abrirForm({Tarefa? tarefa}) {
+  void _abrirForm({Ponto? ponto}) {
     final key = GlobalKey<ConteudoFormDialogState>();
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         title: Text(
-          tarefa == null ? 'Nova Tarefa' : 'Alterar Tarefa ${tarefa.id}',
+          ponto == null ? 'Novo Ponto' : 'Alterar Ponto ${ponto.id}',
         ),
         content: ConteudoFormDialog(
           key: key,
-          tarefaAtual: tarefa,
+          pontoAtual: ponto,
         ),
         actions: [
           TextButton(
@@ -206,20 +189,20 @@ class _ListaTarefasPageState extends State<ListaTarefasPage> {
                 return;
               }
               Navigator.of(context).pop();
-              final novaTarefa = key.currentState!.novaTarefa;
-              _dao.salvar(novaTarefa).then((success) {
+              final novoPonto = key.currentState!.novoPonto;
+              _dao.salvar(novoPonto).then((success) {
                 if (success) {
                   _atualizarLista();
                 }
               });
-            },
+              },
           ),
         ],
       ),
     );
   }
 
-  void _excluir(Tarefa tarefa) {
+  void _excluir(Ponto ponto) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -242,10 +225,10 @@ class _ListaTarefasPageState extends State<ListaTarefasPage> {
             child: Text('OK'),
             onPressed: () {
               Navigator.pop(context);
-              if (tarefa.id == null) {
+              if (ponto.id == null) {
                 return;
               }
-              _dao.remover(tarefa.id!).then((success) {
+              _dao.remover(ponto.id!).then((success) {
                 if (success) {
                   _atualizarLista();
                 }
@@ -265,12 +248,12 @@ class _ListaTarefasPageState extends State<ListaTarefasPage> {
     }
   }
 
-  void _abrirPaginaDetalhesTarefa(Tarefa tarefa) {
+  void _abrirPaginaDetalhesPonto(Ponto ponto) {
     Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => DetalhePage(
-            tarefa: tarefa,
+            ponto: ponto,
           ),
         ));
   }
@@ -280,19 +263,19 @@ class _ListaTarefasPageState extends State<ListaTarefasPage> {
       _carregando = true;
     });
     final prefs = await SharedPreferences.getInstance();
-    final campoOrdenacao = prefs.getString(FiltroPage.chaveCampoOrdenacao) ?? Tarefa.campoId;
-    final usarOrdenDecrescente = prefs.getBool(FiltroPage.chaveUsarOrdemDecrescente) == true;
+    final campoOrdenacao = Ponto.campoId;
+    final usarOrdemDecrescente = prefs.getBool(FiltroPage.chaveUsarOrdemDecrescente) == true;
     final filtroDescricao = prefs.getString(FiltroPage.chaveCampoDescricao) ?? '';
 
-    final tarefas = await _dao.listar(
-      filtro: filtroDescricao,
+    final pontos = await _dao.listar(
+      filtrocontent: filtroDescricao,
       campoOrdenacao: campoOrdenacao,
-      usarOrdemDecrescente: usarOrdenDecrescente,
+      usarOrdemDecrescente: usarOrdemDecrescente,
     );
     setState(() {
-      _tarefas.clear();
-      if (tarefas.isNotEmpty) {
-        _tarefas.addAll(tarefas);
+      _pontos.clear();
+      if (pontos.isNotEmpty) {
+        _pontos.addAll(pontos);
       }
       _carregando = false;
     });

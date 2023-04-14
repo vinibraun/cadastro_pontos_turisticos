@@ -1,11 +1,11 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/sqlite_api.dart';
 
-import '../model/tarefa.dart';
+import '../model/ponto.dart';
 
 class DatabaseProvider {
-  static const _dbName = 'cadastro_tarefas.db';
-  static const _dbVersion = 2;
+  static const _dbName = 'cadastro_pontos.db';
+  static const _dbVersion = 1;
 
   DatabaseProvider._init();
   static final DatabaseProvider instance = DatabaseProvider._init();
@@ -21,30 +21,18 @@ class DatabaseProvider {
       dbPath,
       version: _dbVersion,
       onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
     );
   }
 
   Future<void> _onCreate(Database db, int version) async {
     await db.execute(''' 
-      CREATE TABLE ${Tarefa.nomeTabela} (
-        ${Tarefa.campoId} INTEGER PRIMARY KEY AUTOINCREMENT,
-        ${Tarefa.campoDescricao} TEXT NOT NULL,
-        ${Tarefa.campoPrazo} TEXT,
-        ${Tarefa.campoFinalizada} INTEGER NOT NULL DEFAULT 0
+      CREATE TABLE ${Ponto.nomeTabela} (
+        ${Ponto.campoId} INTEGER PRIMARY KEY AUTOINCREMENT,
+        ${Ponto.campoDescricao} TEXT NOT NULL,
+        ${Ponto.campoDiferenciais} TEXT NOT NULL,
+        ${Ponto.campoData} TEXT
       );
     ''');
-  }
-
-  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    switch(oldVersion){
-      case 1 :
-        await db.execute('''
-          ALTER TABLE ${Tarefa.nomeTabela}
-          ADD ${Tarefa.campoFinalizada} INTEGER NOT NULL DEFAULT 0;
-        ''');
-    }
-
   }
 
   Future<void> close() async {

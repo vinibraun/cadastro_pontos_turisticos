@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../model/tarefa.dart';
+import '../model/ponto.dart';
 
 class FiltroPage extends StatefulWidget{
   static const routeName = '/filtro';
@@ -16,14 +16,15 @@ class FiltroPage extends StatefulWidget{
 class _FiltroPageState extends State<FiltroPage> {
 
   final _camposParaOrdenacao = {
-    Tarefa.campoId: 'Código',
-    Tarefa.campoDescricao: 'Descrição',
-    Tarefa.campoPrazo: 'Prazo'
+    Ponto.campoId: 'Código',
+    Ponto.campoDescricao: 'Descrição',
+    Ponto.campoDiferenciais: 'Diferenciais',
+    Ponto.campoData: 'Data'
   };
 
   late final SharedPreferences _prefes;
   final _descricaoController = TextEditingController();
-  String _campoOrdenacao = Tarefa.campoId;
+  String _campoOrdenacao = Ponto.campoId;
   bool _usarOrdemDecrescente = false;
   bool _alterouValores = false;
 
@@ -36,7 +37,7 @@ class _FiltroPageState extends State<FiltroPage> {
   void _carregaDadosSharedPreferences() async {
     _prefes = await SharedPreferences.getInstance();
     setState(() {
-      _campoOrdenacao = _prefes.getString(FiltroPage.chaveCampoOrdenacao) ?? Tarefa.campoId;
+      _campoOrdenacao = _prefes.getString(FiltroPage.chaveCampoOrdenacao) ?? Ponto.campoId;
       _usarOrdemDecrescente = _prefes.getBool(FiltroPage.chaveUsarOrdemDecrescente) == true;
       _descricaoController.text = _prefes.getString(FiltroPage.chaveCampoDescricao) ?? '' ;
     });
