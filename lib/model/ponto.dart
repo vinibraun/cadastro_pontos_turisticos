@@ -6,17 +6,23 @@ class Ponto {
   static const campoDescricao = 'descricao';
   static const campoDiferenciais = 'diferenciais';
   static const campoData = 'data';
+  static const campoLatitude = 'latitude';
+  static const campoLongitude = 'longitude';
 
   int? id;
   String descricao;
   String diferenciais;
   DateTime? data;
+  double latitude;
+  double longitude;
 
   Ponto({
     this.id,
     required this.descricao,
     required this.diferenciais,
     this.data,
+    required this.latitude,
+    required this.longitude,
   });
 
   String get dataFormatado {
@@ -32,6 +38,8 @@ class Ponto {
     campoDiferenciais: diferenciais,
     campoData:
     data == null ? null : DateFormat("yyyy-MM-dd").format(data!),
+    campoLatitude: latitude,
+    campoLongitude: longitude,
   };
 
   factory Ponto.fromMap(Map<String, dynamic> map) => Ponto(
@@ -41,5 +49,12 @@ class Ponto {
     data: map[campoData] is String
         ? DateFormat("yyyy-MM-dd").parse(map[campoData])
         : null,
+    latitude: map[campoLatitude] is double
+        ? map[campoLatitude]
+        : double.tryParse(map[campoLatitude] ?? '') ?? 0.0,
+    longitude: map[campoLongitude] is double
+        ? map[campoLongitude]
+        : double.tryParse(map[campoLongitude] ?? '') ?? 0.0,
   );
+
 }

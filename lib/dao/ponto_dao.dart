@@ -59,7 +59,9 @@ class PontoDao {
         Ponto.campoId,
         Ponto.campoDescricao,
         Ponto.campoDiferenciais,
-        Ponto.campoData
+        Ponto.campoData,
+        Ponto.campoLatitude,
+        Ponto.campoLongitude
       ],
       where: where,
       orderBy: orderBy,

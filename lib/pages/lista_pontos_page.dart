@@ -8,6 +8,8 @@ import '../model/ponto.dart';
 import '../widgets/conteudo_form_dialog.dart';
 import 'detalhes_ponto_page.dart';
 import 'filtro_page.dart';
+import 'package:geolocator/geolocator.dart';
+import 'dart:math';
 
 class ListaPontosPage extends StatefulWidget {
   @override
@@ -18,6 +20,7 @@ class _ListaPontosPageState extends State<ListaPontosPage> {
   static const acaoEditar = 'editar';
   static const acaoExcluir = 'excluir';
   static const acaoVisualizar = 'visualizar';
+  static const acaoCalcular = 'calcular';
 
   final _pontos = <Ponto>[];
   final _dao = PontoDao();
@@ -116,6 +119,8 @@ class _ListaPontosPageState extends State<ListaPontosPage> {
               _abrirForm(ponto: ponto);
             } else if (valorSelecionado == acaoExcluir) {
               _excluir(ponto);
+            } else if (valorSelecionado == acaoCalcular) {
+              _calcularDistancia(ponto);
             } else {
               _abrirPaginaDetalhesPonto(ponto);
             }
@@ -163,6 +168,18 @@ class _ListaPontosPageState extends State<ListaPontosPage> {
         ],
       ),
     ),
+    PopupMenuItem(
+      value: acaoCalcular,
+      child: Row(
+        children: const [
+          Icon(Icons.directions, color: Colors.green),
+          Padding(
+            padding: EdgeInsets.only(left: 10),
+            child: Text('Calcular Distância'),
+          ),
+        ],
+      ),
+    ),
   ];
 
   void _abrirForm({Ponto? ponto}) {
@@ -200,6 +217,58 @@ class _ListaPontosPageState extends State<ListaPontosPage> {
         ],
       ),
     );
+  }
+
+  double calcularDistancia(double latitude1, double longitude1, double latitude2, double longitude2) {
+    const int raioTerra = 6371; // Raio médio da Terra em quilômetros
+    double lat1Radians = degreesToRadians(latitude1);
+    double lon1Radians = degreesToRadians(longitude1);
+    double lat2Radians = degreesToRadians(latitude2);
+    double lon2Radians = degreesToRadians(longitude2);
+
+    double deltaLat = lat2Radians - lat1Radians;
+    double deltaLon = lon2Radians - lon1Radians;
+
+    double a = sin(deltaLat / 2) * sin(deltaLat / 2) +
+        cos(lat1Radians) * cos(lat2Radians) * sin(deltaLon / 2) * sin(deltaLon / 2);
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+
+    double distancia = raioTerra * c;
+    return distancia;
+  }
+
+  void _calcularDistancia(Ponto ponto) async {
+    // Obtenha a localização atual do dispositivo
+    Position position = await Geolocator.getCurrentPosition();
+
+    // Calcule a distância entre a localização atual e o ponto turístico
+    double distancia = calcularDistancia(
+      position.latitude,
+      position.longitude,
+      ponto.latitude,
+      ponto.longitude,
+    );
+
+    // Exiba o resultado em um aviso na tela
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('Distância'),
+        content: Text('Distância até o ponto turístico: $distancia km'),
+        actions: [
+          TextButton(
+            child: Text('Fechar'),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  double degreesToRadians(double degrees) {
+    return degrees * (pi / 180);
   }
 
   void _excluir(Ponto ponto) {

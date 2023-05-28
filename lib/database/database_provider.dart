@@ -5,7 +5,7 @@ import '../model/ponto.dart';
 
 class DatabaseProvider {
   static const _dbName = 'cadastro_pontos.db';
-  static const _dbVersion = 1;
+  static const _dbVersion = 2;
 
   DatabaseProvider._init();
   static final DatabaseProvider instance = DatabaseProvider._init();
@@ -30,7 +30,9 @@ class DatabaseProvider {
         ${Ponto.campoId} INTEGER PRIMARY KEY AUTOINCREMENT,
         ${Ponto.campoDescricao} TEXT NOT NULL,
         ${Ponto.campoDiferenciais} TEXT NOT NULL,
-        ${Ponto.campoData} TEXT
+        ${Ponto.campoData} TEXT,
+        ${Ponto.campoLatitude} REAL,
+        ${Ponto.campoLongitude} REAL
       );
     ''');
   }

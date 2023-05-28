@@ -55,6 +55,18 @@ class _DetalhePageState extends State<DetalhePage>{
               Valor(valor: widget.ponto.data == null ? 'Ponto sem data definida' : '${widget.ponto.dataFormatado}'),
             ],
           ),
+          Row(
+            children: [
+              Campo(descricao: 'Latitude: '),
+              Valor(valor: '${widget.ponto.latitude}'),
+            ],
+          ),
+          Row(
+            children: [
+              Campo(descricao: 'Longitude: '),
+              Valor(valor: '${widget.ponto.longitude}'),
+            ],
+          ),
         ],
       ),
     );
