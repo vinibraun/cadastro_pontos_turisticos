@@ -5,7 +5,12 @@ import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:maps_launcher/maps_launcher.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import '../model/ponto.dart';
+import 'package:flutter/material.dart';
+import '../model/cep_model.dart';
+import '../services/cep_service.dart';
+import 'package:geocoding/geocoding.dart';
 
 class ConteudoFormDialog extends StatefulWidget{
   final Ponto? pontoAtual;
@@ -16,6 +21,166 @@ class ConteudoFormDialog extends StatefulWidget{
   ConteudoFormDialogState createState() => ConteudoFormDialogState();
 
 }
+
+class CepFormWidget extends StatefulWidget {
+  @override
+  _CepFormWidgetState createState() => _CepFormWidgetState();
+}
+
+class _CepFormWidgetState extends State<CepFormWidget> {
+  final _service = CepService();
+  final _controller = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  double? _latitude;
+  double? _longitude;
+  final _cepFormater = MaskTextInputFormatter(
+    mask: '#####-###',
+    filter: {'#': RegExp(r'[0-9]')},
+  );
+  var _loading = false;
+  Cep? _cep;
+
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Form(
+            key: _formKey,
+            child: TextFormField(
+              controller: _controller,
+              decoration: InputDecoration(
+                labelText: 'CEP',
+                suffixIcon: _loading
+                    ? Padding(
+                  padding: EdgeInsets.all(10),
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+                    : IconButton(
+                  onPressed: _findCep,
+                  icon: Icon(Icons.search),
+                ),
+              ),
+              inputFormatters: [_cepFormater],
+              validator: (String? value) {
+                if (value == null || value.isEmpty || !_cepFormater.isFill()) {
+                  return 'Informe um cep válido!';
+                }
+                return null;
+              },
+            ),
+          ),
+          Container(height: 10),
+          ..._buildWidgets(),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildWidgets() {
+    final List<Widget> widgets = [];
+    if (_cep != null) {
+      widgets.addAll([
+        Text('CEP: ${_cep!.cep ?? ''}'),
+        Text('Logradouro: ${_cep!.logradouro ?? ''}'),
+        Text('Complemento: ${_cep!.complemento ?? ''}'),
+        Text('Bairro: ${_cep!.bairro ?? ''}'),
+        Text('Cidade: ${_cep!.localidade ?? ''}'),
+        Text('Estado: ${_cep!.uf ?? ''}'),
+        Text('IBGE: ${_cep!.ibge ?? ''}'),
+        Text('GIA: ${_cep!.gia ?? ''}'),
+        Text('Código de Área: ${_cep!.codigoDeArea ?? ''}'),
+        Text('SIAFI: ${_cep!.siafi ?? ''}'),
+        ElevatedButton(
+          onPressed: _getCoordinates,
+          child: Text('Obter coordenadas'),
+        ),
+        if (_latitude != null) Text('Latitude: $_latitude'),
+        if (_longitude != null) Text('Longitude: $_longitude'),
+      ]);
+    }
+    return widgets;
+  }
+
+  Future<void> _findCep() async {
+    if (_formKey.currentState == null || !_formKey.currentState!.validate()) {
+      return;
+    }
+    setState(() {
+      _loading = true;
+    });
+    try {
+      _cep = await _service.findCepAsObject(_cepFormater.getUnmaskedText());
+    } catch (e) {
+      debugPrint(e.toString());
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              'Ocorreu um erro, tente novamente! \nERRO: ${e.toString()}')));
+    }
+    setState(() {
+      _loading = false;
+    });
+  }
+
+  Future<void> _getCoordinates() async {
+    if (_cep != null) {
+      try {
+        final address = '${_cep!.logradouro ?? ''}, ${_cep!.localidade ?? ''}, ${_cep!.uf ?? ''}';
+        List<Location> locations = await locationFromAddress(address);
+
+        if (locations.isNotEmpty) {
+          Location location = locations[0];
+          setState(() {
+            _latitude = location.latitude;
+            _longitude = location.longitude;
+          });
+        } else {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('Erro'),
+                content: Text('Ocorreu um erro ao obter as coordenadas. Tente novamente.'),
+                actions: [
+                  TextButton(
+                    child: Text('OK'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        }
+      } catch (e) {
+        debugPrint(e.toString());
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Erro'),
+              content: Text('Ocorreu um erro ao obter as coordenadas. Tente novamente.'),
+              actions: [
+                TextButton(
+                  child: Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
+    }
+  }
+
+}
+
+
+
 class ConteudoFormDialogState extends State<ConteudoFormDialog> {
 
   GoogleMapController? _mapController;
@@ -214,6 +379,36 @@ class ConteudoFormDialogState extends State<ConteudoFormDialog> {
     return true;
   }
 
+  final _service = CepService();
+  final _formKey = GlobalKey<FormState>();
+  var _loading = false;
+  Cep? _cep;
+  final _cepFormater = MaskTextInputFormatter(
+      mask: '#####-###',
+      filter: {'#' : RegExp(r'[0-9]')}
+  );
+
+  Future<void> _findCep() async {
+    if(_formKey.currentState == null || !_formKey.currentState!.validate()){
+      return;
+    }
+    setState(() {
+      _loading = true;
+    });
+    try{
+      _cep = await _service.findCepAsObject(_cepFormater.getUnmaskedText());
+    }catch(e){
+      debugPrint(e.toString());
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Ocorreu um erro, tente noavamente! \n'
+              'ERRO: ${e.toString()}')
+      ));
+    }
+    setState(() {
+      _loading = false;
+    });
+  }
+
   void _obterLocalizacaoAtual() async {
     if (widget.pontoAtual != null && widget.pontoAtual!.latitude != null && widget.pontoAtual!.longitude != null) {
       // Coordenadas já estão definidas no objeto pontoAtual
@@ -232,8 +427,44 @@ class ConteudoFormDialogState extends State<ConteudoFormDialog> {
     }
     _localizacaoAtual = await Geolocator.getCurrentPosition();
     setState(() {});
-  }
 
+    // Mostrar o diálogo de confirmação
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirmação de Localização'),
+          content: Text('A localização obtida é correta?'),
+          actions: [
+            TextButton(
+              child: Text('Sim'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                // A localização é correta, continuar com o processamento e salvar no banco de dados
+              },
+            ),
+            TextButton(
+              child: Text('Não'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text('Pesquisar por CEP'),
+                      content: SingleChildScrollView(
+                        child: CepFormWidget(),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void _mostrarMensagem(String mensagem){
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensagem)));
